@@ -1,0 +1,68 @@
+﻿@page "/"
+
+@inject DiscordService _discordService;
+@inject ILocalStorageService _localStorage;
+
+<PageTitle>Home</PageTitle>
+
+<div class="flex flex-col gap-4">
+
+    <div class="flex flex-col gap-1">
+
+        <label for="title">Title</label>
+        <input id="title" @bind="_data.Title"></input>
+
+        <label for="description">Description</label>
+        <input id="description" @bind="_data.Title"></input>
+
+        <label for="avatar">Avatar URL</label>
+        <div class="flex flex-row gap-2 justify-between">
+            <img src=@_data.Avatar class="w-12 h-12"/>
+            <input id="avatar" @bind="_data.Avatar" class="flex-1"></input>
+        </div>
+
+        <label for="username">Webhook Name</label>
+        <input id="username" @bind="_data.Username"></input>
+
+    </div>
+
+    <button class="self-baseline" @onclick="SendDataAsync" disabled="@(isLoading)">@SendButtonMessage</button>
+</div>
+
+@code{
+    private WebhookData _data { get; set; } = new WebhookData();
+
+    private bool isLoading = false;
+    private string SendButtonMessage
+    {
+        get
+        {
+            return isLoading ? "Sending..." : "Send";
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // _data = await _localStorage.GetItemAsync<WebhookData>("data");
+            StateHasChanged();
+        }
+    }
+
+    public async Task SendDataAsync(){
+        isLoading = true;
+
+        var embed = new EmbedBuilder()
+        {
+            Title = _data.Title,
+            Description = _data.Description
+        }.Build();
+
+        await _discordService.SendWebhookAsync(embed, _data.Avatar, _data.Username);
+
+        //await _localStorage.SetItemAsync<WebhookData>("data", _data);
+
+        isLoading = false;
+    }
+}
